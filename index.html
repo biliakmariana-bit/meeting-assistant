@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#173b35">
+<title>Помічник секретаря нарад</title>
+<style>
+:root{--green:#173b35;--mint:#e8f1ed;--ink:#1d2926;--muted:#687772;--line:#dce5e1;--bg:#f5f7f6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--green);color:white;padding:22px 18px 20px}header h1{font-size:21px;margin:0 0 4px}header p{margin:0;color:#d8e6e1;font-size:13px}
+main{max-width:760px;margin:auto;padding:15px;display:grid;gap:14px}
+.card{background:white;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 2px 8px #10251b08}
+h2{font-size:17px;margin:0 0 12px}.hint{font-size:13px;color:var(--muted);margin:7px 0 0}
+label{display:block;font-weight:600;font-size:13px;margin:12px 0 5px}
+input,textarea,select{width:100%;border:1px solid #cbd8d2;border-radius:10px;padding:11px;font:inherit;background:white;color:var(--ink)}
+textarea{min-height:105px;resize:vertical}
+.row{display:flex;gap:9px;flex-wrap:wrap}.row>*{flex:1;min-width:125px}
+button{border:0;border-radius:11px;padding:12px 14px;font-weight:650;font-size:14px;cursor:pointer;background:var(--green);color:white}
+button.secondary{background:var(--mint);color:var(--green)}button.danger{background:#a93232}button:disabled{opacity:.45;cursor:not-allowed}
+.rec{display:flex;align-items:center;gap:12px}.dot{width:12px;height:12px;border-radius:50%;background:#9aa9a2}.dot.live{background:#d33131;box-shadow:0 0 0 6px #d3313120}
+#timer{font-size:25px;font-weight:750;font-variant-numeric:tabular-nums}
+.status{font-size:13px;color:var(--muted)}.small{font-size:12px;color:var(--muted)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+footer{padding:5px 18px 25px;text-align:center;color:var(--muted);font-size:12px}
+@media(min-width:650px){main{grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<header><h1>Помічник секретаря нарад</h1><p>Запис · протокол · тези · контроль доручень</p></header>
+<main>
+<section class="card wide">
+<h2>1. Дані наради</h2>
+<div class="row">
+<div><label for="title">Назва наради</label><input id="title" placeholder="Наприклад, операційна нарада кластера"></div>
+<div><label for="date">Дата</label><input id="date" type="date"></div>
+</div>
+<div class="row">
+<div><label for="chair">Головуючий</label><input id="chair" placeholder="ПІБ"></div>
+<div><label for="secretary">Секретар</label><input id="secretary" placeholder="ПІБ"></div>
+</div>
+<label for="attendees">Присутні / запрошені</label><textarea id="attendees" placeholder="Вкажіть учасників, посади за потреби"></textarea>
+</section>
+
+<section class="card wide">
+<h2>2. Запис наради</h2>
+<div class="rec"><span id="dot" class="dot"></span><div><div id="timer">00:00:00</div><div id="recStatus" class="status">Запис не розпочато</div></div></div>
+<div class="row" style="margin-top:14px">
+<button id="start">Почати запис</button><button id="stop" class="danger" disabled>Завершити запис</button>
+</div>
+<p class="hint">Потрібен дозвіл на мікрофон. Не закривайте вкладку під час запису та не блокуйте телефон. Після завершення аудіо можна зберегти на пристрій.</p>
+<div id="audioBox" hidden style="margin-top:12px"><audio id="player" controls style="width:100%"></audio><button id="saveAudio" class="secondary" style="width:100%;margin-top:8px">Завантажити аудіозапис</button></div>
+</section>
+
+<section class="card wide">
+<h2>3. Текст розшифровки</h2>
+<label for="transcript">Вставте розшифровку наради</label>
+<textarea id="transcript" style="min-height:180px" placeholder="Сюди можна вставити текст, отриманий із сервісу розпізнавання мовлення. У цій першій версії автоматичне розпізнавання ще не підключене."></textarea>
+<p class="hint">Поточна версія записує звук і готує документи з тексту, який ви вставите. Автоматичне розпізнавання та ШІ-аналіз підключимо наступним етапом після вибору дозволеного сервісу.</p>
+</section>
+
+<section class="card">
+<h2>4. Основні тези</h2>
+<label for="agenda">Питання порядку денного</label><textarea id="agenda" placeholder="1. ...&#10;2. ..."></textarea>
+<label for="discussion">Короткий виклад обговорення</label><textarea id="discussion" placeholder="Основний зміст обговорення"></textarea>
+<label for="decisions">Прийняті рішення</label><textarea id="decisions" placeholder="Що саме вирішили"></textarea>
+</section>
+
+<section class="card">
+<h2>5. Доручення для Excel</h2>
+<label for="tasks">По одному дорученню на рядок у форматі: завдання | відповідальний | термін | статус</label>
+<textarea id="tasks" placeholder="Перевірити рахунки пайовиків | Іваненко І.І. | 15.11.2026 | Не розпочато&#10;Підготувати звіт | Петренко П.П. | 16.11.2026 | Не розпочато"></textarea>
+<p class="hint">Якщо відповідального або термін не визначили, залиште поле порожнім — не вигадуйте їх.</p>
+</section>
+
+<section class="card wide">
+<h2>6. Експорт документів</h2>
+<div class="actions">
+<button id="word">Завантажити протокол Word</button>
+<button id="excel" class="secondary">Завантажити доручення Excel</button>
+</div>
+<p class="hint">Word-файл формується у форматі, сумісному з Microsoft Word. Excel-файл — CSV, який відкривається в Excel. Перевірте й відредагуйте документи перед офіційним використанням.</p>
+</section>
+</main>
+<footer>Перша тестова версія. Аудіо та введений текст обробляються у вкладці браузера; запис не надсилається автоматично на сервер.</footer>
+<script>
+const $=id=>document.getElementById(id);
+let recorder=null, chunks=[], audioBlob=null, started=0, tick=null, stream=null, wakeLock=null;
+const pad=n=>String(n).padStart(2,'0');
+function elapsed(){let s=Math.floor((Date.now()-started)/1000);$('timer').textContent=`${pad(Math.floor(s/3600))}:${pad(Math.floor(s%3600/60))}:${pad(s%60)}`}
+$('date').value=new Date().toISOString().slice(0,10);
+$('start').onclick=async()=>{
+ try{
+  if(!navigator.mediaDevices?.getUserMedia) throw new Error('Браузер не надав доступу до мікрофона. Відкрийте застосунок через захищене HTTPS-посилання.');
+  stream=await navigator.mediaDevices.getUserMedia({audio:true});
+  const mime=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
+  recorder=new MediaRecorder(stream,{mimeType:mime});chunks=[];
+  recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+  recorder.onstop=()=>{audioBlob=new Blob(chunks,{type:recorder.mimeType||'audio/webm'});$('player').src=URL.createObjectURL(audioBlob);$('audioBox').hidden=false;stream.getTracks().forEach(t=>t.stop());};
+  recorder.start(1000);started=Date.now();elapsed();tick=setInterval(elapsed,1000);
+  try{if('wakeLock' in navigator)wakeLock=await navigator.wakeLock.request('screen')}catch(e){}
+  $('dot').classList.add('live');$('recStatus').textContent='Йде запис';$('start').disabled=true;$('stop').disabled=false;
+ }catch(e){alert(e.message||'Не вдалося почати запис. Перевірте дозвіл на мікрофон.')}
+};
+$('stop').onclick=()=>{
+ if(recorder&&recorder.state!=='inactive')recorder.stop();
+ clearInterval(tick);$('dot').classList.remove('live');$('recStatus').textContent='Запис завершено';$('start').disabled=false;$('stop').disabled=true;
+ if(wakeLock){wakeLock.release();wakeLock=null}
+};
+$('saveAudio').onclick=()=>{if(!audioBlob)return;downloadBlob(audioBlob,`нарада-${$('date').value||'запис'}.webm`)};
+function downloadBlob(blob,name){const a=document.createElement('a');const u=URL.createObjectURL(blob);a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500)}
+function val(id){return $(id).value.trim()}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function lines(s){return s.split(/\n+/).map(x=>x.trim()).filter(Boolean)}
+$('word').onclick=()=>{
+ const title=val('title')||'Протокол наради', date=val('date')||'Не зазначено';
+ const tasks=lines(val('tasks')).map((x,i)=>{let p=x.split('|').map(z=>z.trim());return `<tr><td>${i+1}</td><td>${esc(p[0]||'')}</td><td>${esc(p[1]||'')}</td><td>${esc(p[2]||'')}</td></tr>`}).join('');
+ const section=(h,s)=>`<h2>${h}</h2><p>${esc(s||'Не зазначено').replace(/\n/g,'<br>')}</p>`;
+ const doc=`<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:"Times New Roman";font-size:12pt}h1{text-align:center;font-size:16pt}h2{font-size:13pt;margin-top:18px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #555;padding:6px}</style></head><body><h1>${esc(title)}</h1><p style="text-align:center">Дата: ${esc(date)}</p><p>Головуючий: ${esc(val('chair')||'Не зазначено')}<br>Секретар: ${esc(val('secretary')||'Не зазначено')}<br>Присутні: ${esc(val('attendees')||'Не зазначено').replace(/\n/g,'; ')}</p>${section('Порядок денний',val('agenda'))}${section('Текст розшифровки',val('transcript'))}${section('Обговорення',val('discussion'))}${section('Прийняті рішення',val('decisions'))}<h2>Доручення</h2><table><tr><th>№</th><th>Завдання</th><th>Відповідальний</th><th>Термін</th></tr>${tasks}</table><p style="margin-top:40px">Головуючий ____________________　Секретар ____________________</p></body></html>`;
+ downloadBlob(new Blob(['\ufeff',doc],{type:'application/msword'}),`Протокол-${date}.doc`);
+};
+$('excel').onclick=()=>{
+ const rows=[['№','Доручення','Відповідальний','Термін','Статус']];
+ lines(val('tasks')).forEach((x,i)=>{let p=x.split('|').map(z=>z.trim());rows.push([String(i+1),p[0]||'',p[1]||'',p[2]||'',p[3]||'Не визначено'])});
+ const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n');
+ downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),`Доручення-${val('date')||'нарада'}.csv`);
+};
+</script>
+</body></html>
